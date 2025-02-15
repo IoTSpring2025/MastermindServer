@@ -1,9 +1,7 @@
 from game import Game, Player
 import sys
 import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from Mastermind.ml.model import Model
+from model import Model
 
 class MastermindData:
     def __init__(self):
@@ -40,5 +38,4 @@ class MastermindData:
         try:
             return self.model.read_hand(frame_bytes)
         except Exception as e:
-            print(f"inference failure: {str(e)}")
-            return {"error": "Failed to process image"}
+            return {"error": f"Failed to process image: {e}"}
