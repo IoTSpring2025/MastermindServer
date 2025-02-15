@@ -9,6 +9,7 @@ class MastermindData:
     def __init__(self):
         self.games = {}
         self.model = Model()
+        self.connections = {}
             
     def add_game(self, game_id):
         self.games[game_id] = Game(game_id, model=self.model)
@@ -34,3 +35,10 @@ class MastermindData:
         if game_id not in self.games:
             return f"Game {game_id} does not exist."
         return self.games[game_id].players
+
+    def run_inference(self, frame_bytes):
+        try:
+            return self.model.read_hand(frame_bytes)
+        except Exception as e:
+            print(f"inference failure: {str(e)}")
+            return {"error": "Failed to process image"}
