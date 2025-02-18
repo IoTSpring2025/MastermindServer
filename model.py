@@ -5,7 +5,7 @@ from PIL import Image
 import io 
 
 class Model():
-    def __init__(self, version=4, confidence=33, overlap=15):
+    def __init__(self, version, confidence=50, overlap=0):
         self.version = version
         self.rf_client = Roboflow(api_key=os.environ.get("ROBOFLOW_API_KEY"))
         self.project = self.rf_client.workspace().project(os.environ.get("ROBOFLOW_PROJECT"))
