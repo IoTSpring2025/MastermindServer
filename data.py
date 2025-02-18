@@ -7,8 +7,12 @@ class MastermindData:
     def __init__(self):
         self.games = {}
         self.model = Model(version=7)
-        self.connections = {}
-            
+        self.devices = {}
+
+    # =======================================================
+    # Game State
+    # =======================================================
+
     def add_game(self, game_id):
         self.games[game_id] = Game(game_id, model=self.model)
     
@@ -34,8 +38,27 @@ class MastermindData:
             return f"Game {game_id} does not exist."
         return self.games[game_id].players
 
+
+    # =======================================================
+    # Inference 
+    # =======================================================
+
     def run_inference(self, frame_bytes):
         try:
             return self.model.read_hand(frame_bytes)
         except Exception as e:
             return {"error": f"Failed to process image: {e}"}
+
+
+    # =======================================================
+    # Device Management 
+    # =======================================================
+
+    def add_device(self, device_name, state):
+        self.devices[device_name] = state
+
+    def get_devices(self):
+        return self.devices
+    
+    def remove_device(self, device_name):
+        del self.devices[device_name]
