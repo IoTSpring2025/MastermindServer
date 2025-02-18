@@ -1,11 +1,11 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker-compose'
+  - name: 'docker/compose:1.29.2'
     args:
       - up
       - --build
       - -d
     id: Build
-  - name: 'gcr.io/cloud-builders/docker-compose'
+  - name: 'docker/compose:1.29.2'
     args:
       - push
     id: Push
@@ -25,7 +25,8 @@ steps:
     id: Deploy
     entrypoint: gcloud
 images:
-  - $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+  - >-
+    $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
 options:
   substitutionOption: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
