@@ -6,7 +6,7 @@ from model import Model
 class MastermindData:
     def __init__(self):
         self.games = {}
-        self.model = Model()
+        self.model = Model(version=7)
         self.connections = {}
             
     def add_game(self, game_id):
