@@ -4,9 +4,10 @@ import requests
 import time
 import argparse
 
-def poll_connected_devices():
+def poll_connected_devices(server_uri):
     try:
-        response = requests.get("http://localhost:8080/mqtt/connected")
+        server_uri += "/mqtt/connected"
+        response = requests.get(server_uri)
         devices = response.json()
         print("Connected devices:", devices)
     except Exception as e:
@@ -27,9 +28,11 @@ def main():
 
     if args.remote:
         mqtt_broker = "mastermind-mqtt-146524160112.us-central1.run.app"
+        server_uri = ""
         print("Connecting to remote broker")
     else:
         mqtt_broker = "localhost"
+        server_uri = "http://localhost:8080"
         print("Connecting to local broker")
     
     client = mqtt.Client(client_id="cam1", callback_api_version=1)
