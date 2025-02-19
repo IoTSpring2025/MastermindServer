@@ -8,7 +8,7 @@ class Model():
     def __init__(self, version, confidence=50, overlap=0):
         self.version = version
         self.rf_client = Roboflow(api_key=os.environ.get("ROBOFLOW_API_KEY", None))
-        self.project = self.rf_client.workspace().project(os.environ.get("ROBOFLOW_PROJECT", None))
+        self.project = self.rf_client.workspace().project("card-detection-zk7wu-3lymd")
         self.model = self.project.version(self.version).model
         self.confidence = confidence
         self.overlap = overlap

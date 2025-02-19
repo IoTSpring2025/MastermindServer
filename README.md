@@ -14,10 +14,9 @@ and
 and 
 `pip install -r requirements.txt`
 
-If you are running locally, you will need to set the following environment variables:
+If you are running locally, you will need to set the following environment variable:
 
 1. ROBOFLOW_API_KEY: `export ROBOFLOW_API_KEY=<your_api_key_here>`
-2. ROBOFLOW_PROJECT: `export ROBOFLOW_PROJECT=<your_api_key_here>`
 
 You can find these on your Roboflow Account. Reach out to @jkrue242 if you don't have an account.
 
