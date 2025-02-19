@@ -24,5 +24,10 @@ You can test out the streaming and classification by running
 `python demo.py` 
 in a new terminal, which will act as the client. This should enable the camera. To test classification, hold a playing card to the camera. The server will give a response with the predicted card(s).
 
+<b>Running demo with remote server</b>
+To run the demo with the remote server, run:
+
+`python demo.py --remote`
+
 #### Cloud Deployment
 New cloud deployments happen on any commit to `main`, and are automatically handled by Google Cloud Platform behind the scenes. Note: We might want to set up terraform for this in case we want to strictly set the cloud environment in code. 

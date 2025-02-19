@@ -56,7 +56,7 @@ if __name__ == "__main__":
     player_id = "dummy"
 
     if args.remote:
-        uri = "wss://mastermind-server-146524160112.us-central1.run.app/"
+        uri = "wss://mastermindserver-146524160112.us-central1.run.app/"
         print("Connecting to remote server")
     else:
         uri = "ws://0.0.0.0:8080/"
