@@ -24,7 +24,7 @@ You can find these on your Roboflow Account. Reach out to @jkrue242 if you don't
 <b>Running the server</b>
 
 You can run the server locally by running 
-`./local_run.sh`
+`./local_run_server.sh`
 
 This will build and run the docker container specified in the Dockerfile.
 
@@ -42,6 +42,10 @@ New cloud deployments happen on any commit to `main`, and are automatically hand
 We will be using MQTT to track connection status of each of the cameras. First, install `mosquitto`. You can do this on mac like:
 
 `brew install mosquitto`
+
+To start the mqtt broker locally:
+
+`./local_run_mqtt.sh`
 
 Then, to run the demo mqtt script, run 
 

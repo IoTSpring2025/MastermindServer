@@ -1,4 +1,5 @@
 venv
 .gitignore
 .gitmodules
-run.sh
+local_run_mqtt.sh
+local_run_server.sh
