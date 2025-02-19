@@ -20,7 +20,16 @@ def publish_connection_status(client, status):
     print(f"Published: {payload}")
 
 def main():
-    mqtt_broker = "localhost" 
+    parser = argparse.ArgumentParser(description="Connect to MQTT")
+    parser.add_argument("--remote", action="store_true", help="Use remote server")
+    args = parser.parse_args()
+
+    if args.remote:
+        mqtt_broker = "mastermind-mqtt-146524160112.us-central1.run.app"
+        print("Connecting to remote broker")
+    else:
+        mqtt_broker = "localhost"
+        print("Connecting to local broker")
     
     client = mqtt.Client(client_id="cam1", callback_api_version=1)
     BROKER_PORT = 1883 
