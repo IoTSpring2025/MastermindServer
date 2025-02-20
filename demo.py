@@ -5,7 +5,7 @@ import json
 import argparse
 
 async def stream_video(game_id, player_id, uri):
-    uri += f"socket/video/{game_id}/{player_id}"
+    uri += f"socket/video?game_id={game_id}&player_id={player_id}"
 
     # connect to web socket
     async with websockets.connect(uri) as websocket:

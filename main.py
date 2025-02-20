@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket, Query
 from fastapi.middleware.cors import CORSMiddleware
 from data import MastermindData
 import uvicorn 
@@ -12,13 +12,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 data = MastermindData()
 
-# web socket for video stream
-@app.websocket("/socket/video/{game_id}/{player_id}")
-async def video_stream(web_socket: WebSocket, game_id: str, player_id: str):
+# web socket for video stream 
+@app.websocket("/socket/video")
+async def video_stream(web_socket: WebSocket):
     await web_socket.accept()
+    game_id = web_socket.query_params.get("game_id")
+    player_id = web_socket.query_params.get("player_id")
     try:
         while True:
             video = await web_socket.receive_bytes()
@@ -36,25 +37,32 @@ async def video_stream(web_socket: WebSocket, game_id: str, player_id: str):
     finally:
         pass
 
-# api for game state
-@app.post("/create/{game_id}/{player_id}")
+# API endpoint for creating a game
+@app.post("/create")
 async def create_game(game_id: str, player_id: str):
     data.add_game(game_id=game_id)
     data.add_player(game_id=game_id, player_id=player_id)
     return f"Game {game_id} created"
 
-@app.post("/join/{game_id}/{player_id}")
+# API endpoint for joining a game
+@app.post("/join")
 async def join_game(game_id: str, player_id: str):
     return data.add_player(game_id=game_id, player_id=player_id)
 
-@app.get("/get_hand/{game_id}/{player_id}")
+# API endpoint for getting a hand
+@app.get("/get_hand")
 async def get_hand(game_id: str, player_id: str):
     return data.get_hand(game_id=game_id, player_id=player_id)
 
+# API endpoint to get the list of game
 @app.get("/get_games")
 async def get_games():
     return data.get_game_list()
 
-@app.get("/get_players/{game_id}")
+# API endpoint for getting players in a game 
+@app.get("/get_players")
 async def get_players(game_id: str):
     return data.get_game_players(game_id=game_id)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
