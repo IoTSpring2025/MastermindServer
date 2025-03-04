@@ -17,8 +17,8 @@ class Model:
         self.overlap = overlap
         self.frames_seen = 0
         self.current_predictions = []
-        self.max_frame_count = 6
-        self.thresh = 0.33
+        self.max_frame_count = 10
+        self.thresh = 0.5
 
     def _detect_single(self, image_bytes: bytes) -> list[dict[str, float]]:
         # inference on a single frame
@@ -54,7 +54,6 @@ class Model:
         if conf and len(pred) > 0:
             return pred
         elif self.frames_seen >= self.max_frame_count:
-            print("processing predictions")
             filtered_preds = self._process_predictions()
 
             # reset
@@ -66,7 +65,6 @@ class Model:
             else:
                 return []
         else:
-            print("not enough frames: ", self.frames_seen)
             return []
 
     def _process_predictions(self) -> list[str]:

@@ -7,95 +7,86 @@ class Game:
         self.game_id: str = game_id
         self.model: Model = model
         self.players: dict[str, Player] = {}
-        self.flop: list[str] = None
+        self.flop: set[str] = [] 
         self.turn: str = None
         self.river: str = None
 
     # =============================================================================
     # Hand Management
     # =============================================================================
-    def attempt_hand_detection(self, player_id: str, frame_bytes: bytes) -> bool:
-        # check if the player hand can be detected and set it
+    def attempt_hand_detection(self, player_id: str, predictions: list[str]) -> bool:
         try:
-            output: dict[str, str] = self.model.detect(frame_bytes)
-
-            # player cards must be 2 cards
-            if len(output.keys()) == 2:
-                self.players[player_id].set_hand(output["cards"])
+            # ensure player exists
+            if player_id not in self.players:
+                print(f"Player {player_id} not found")
+                return False
+            
+            # must have 2 cards
+            if len(predictions) == 2 and self.players[player_id].get_hand() == set():
+                print(f"Setting hand for player {player_id}: {predictions}")  # Debug log
+                self.players[player_id].set_hand(set(predictions))
                 return True
             else:
+                print(f"Wrong number of cards detected: {len(predictions)}")  # Debug log
                 return False
         except Exception as e:
-            return {"error": f"Failed to process image: {e}"}
+            print(f"Error in hand detection: {e}")
+            return False
 
-    def attempt_flop_detection(self, frame_bytes: bytes) -> bool:
+    def attempt_flop_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
         # check if the flop can be detected and set it
-        try:
-            output: dict[str, str] = self.model.detect(frame_bytes)
-            output_cards = set(output["cards"])
-            all_player_cards = set()
+        if len(predictions) == 0:
+            return False
+        
+        output_cards = set(predictions.keys())
+        player_cards = self.players[player_id].get_hand()
 
-            for player in self.players.values():
-                all_player_cards.update(player.get_hand())
+        # the flop will be any card in the output that is not in the player's hand
+        diff = output_cards.difference(player_cards)
 
-            # the flop will be any card in the output that is not in the player's hand
-            diff = output_cards.difference(all_player_cards)
-
-            # flop must be 3 cards
-            if len(diff) == 3:
-                self.flop.extend(output_cards.difference(all_player_cards))
-                return True
-            else:
-                return False
-        except Exception as e:
-            return {"error": f"Failed to process image: {e}"}
-
-    def attempt_turn_detection(self, frame_bytes: bytes) -> bool:
+        # flop must be 3 cards
+        if len(diff) == 3:
+            self.flop.extend(diff)
+            return True
+        else:
+            return False
+    def attempt_turn_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
         # check if the turn can be detected and set it
-        try:
-            output: dict[str, str] = self.model.detect(frame_bytes)
-            output_cards = set(output["cards"])
-            all_player_cards = set()
+        if len(predictions) == 0:
+            return False
+        output_cards = set(predictions.keys())
+        player_cards = self.players[player_id].get_hand()
 
-            for player in self.players.values():
-                all_player_cards.update(player.get_hand())
+        # the turn will be any card in the output that is not in the player's hand or flop
+        diff = output_cards.difference(player_cards)
+        diff = diff.difference(set(self.flop))
 
-            # the turn will be any card in the output that is not in the player's hand or flop
-            diff = output_cards.difference(all_player_cards)
-            diff = diff.difference(set(self.flop))
-
-            # turn must be 1 card
-            if len(diff) == 1:
-                self.turn = diff.pop()
-                return True
-            else:
-                return False
-        except Exception as e:
-            return {"error": f"Failed to process image: {e}"}
-
-    def attempt_river_detection(self, frame_bytes: bytes) -> bool:
+        # turn must be 1 card
+        if len(diff) == 1:
+            self.set_turn(diff.pop())
+            return True
+        else:
+            return False
+        
+    def attempt_river_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
         # check if the river can be detected and set it
-        try:
-            output: dict[str, str] = self.model.detect(frame_bytes)
-            output_cards = set(output["cards"])
-            all_player_cards = set()
+        if len(predictions) == 0:
+            return False
 
-            for player in self.players.values():
-                all_player_cards.update(player.get_hand())
+        output_cards = set(predictions.keys())
+        player_cards = self.players[player_id].get_hand()
 
-            # the river will be any card in the output that is not in the player's hand or flop or turn
-            diff = output_cards.difference(all_player_cards)
-            diff = diff.difference(set(self.flop))
-            diff = diff.difference(set(self.turn))
+        # the turn will be any card in the output that is not in the player's hand or flop
+        diff = output_cards.difference(player_cards)
+        diff = diff.difference(set(self.flop))
+        diff = diff.difference(set(self.turn))
 
-            # river must be 1 card
-            if len(diff) == 1:
-                self.river = diff.pop()
-                return True
-            else:
-                return False
-        except Exception as e:
-            return {"error": f"Failed to process image: {e}"}
+        # turn must be 1 card
+        if len(diff) == 1:
+            self.set_river(diff.pop())
+            return True
+        else:
+            return False
 
     # =============================================================================
     # Player Management
@@ -115,16 +106,46 @@ class Game:
             self.players.pop(player_id, None)
 
     def set_player_hand(self, player_id: str, hand: list[str]) -> None:
-        self.players[player_id].set_hand(hand)
+        if player_id not in self.players:
+            print(f"Cannot set hand: Player {player_id} not found")
+            return
+        
+        print(f"Setting hand for {player_id}: {hand}") 
+        self.players[player_id].set_hand(set(hand))
 
-    def get_player_hand(self, player_id: str) -> list[str]:
-        return self.players[player_id].get_hand()
+    def get_player_hand(self, player_id: str) -> set[str]:
+        if player_id not in self.players:
+            print(f"Cannot get hand: Player {player_id} not found")
+            return set()
+        
+        hand = self.players[player_id].get_hand()
+        print(f"Getting hand for {player_id}: {hand}")
+        return hand
 
     # =============================================================================
     # Board Management
     # =============================================================================
-    def set_board(self, board: list[str]) -> None:
-        self.board = board
+    
+    def set_flop(self, flop: list[str]) -> None:
+        self.flop = flop
 
-    def get_board(self) -> list[str]:
-        return self.board
+    def get_flop(self) -> list[str] | dict[str, str]:
+        return self.flop
+    
+    def set_turn(self, turn: str) -> None:
+        self.turn = turn
+
+    def get_turn(self) -> str | dict[str, str]:
+        return self.turn
+    
+    def set_river(self, river: str) -> None:
+        self.river = river
+
+    def get_river(self) -> str | dict[str, str] :
+        return self.river
+
+    
+    
+    
+    
+    

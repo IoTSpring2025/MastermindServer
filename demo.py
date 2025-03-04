@@ -3,6 +3,7 @@ import cv2
 import websockets
 import json
 import argparse
+import requests
 
 
 async def stream_video(game_id, player_id, uri, display):
@@ -27,6 +28,23 @@ async def stream_video(game_id, player_id, uri, display):
                 if not ret:
                     print("Error: Failed to encode frame")
                     continue
+                
+                # check hand
+                print('--------------------------------')
+                response = requests.get(f"http://0.0.0.0:8080/get_hand?game_id={game_id}&player_id={player_id}")
+                print("Hand: ", response.json())
+
+                # check flop
+                response = requests.get(f"http://0.0.0.0:8080/get_flop?game_id={game_id}")
+                print("Flop: ", response.json())
+
+                # check turn
+                response = requests.get(f"http://0.0.0.0:8080/get_turn?game_id={game_id}")
+                print("Turn: ", response.json())
+
+                # check river
+                response = requests.get(f"http://0.0.0.0:8080/get_river?game_id={game_id}")
+                print("River: ", response.json())
 
                 frame_bytes = buffer.tobytes()
                 await websocket.send(frame_bytes)
@@ -66,6 +84,9 @@ if __name__ == "__main__":
     else:
         uri = "ws://0.0.0.0:8080/"
         print("Connecting to local server")
+
+    # create dummy game
+    requests.post(f"http://0.0.0.0:8080/create?game_id={game_id}&player_id={player_id}")
 
     # run async
     asyncio.get_event_loop().run_until_complete(
