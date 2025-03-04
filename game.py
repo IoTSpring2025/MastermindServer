@@ -7,7 +7,7 @@ class Game:
         self.game_id: str = game_id
         self.model: Model = model
         self.players: dict[str, Player] = {}
-        self.flop: set[str] = [] 
+        self.flop: set[str] = []
         self.turn: str = None
         self.river: str = None
 
@@ -20,24 +20,30 @@ class Game:
             if player_id not in self.players:
                 print(f"Player {player_id} not found")
                 return False
-            
+
             # must have 2 cards
             if len(predictions) == 2 and self.players[player_id].get_hand() == set():
-                print(f"Setting hand for player {player_id}: {predictions}")  # Debug log
+                print(
+                    f"Setting hand for player {player_id}: {predictions}"
+                )  # Debug log
                 self.players[player_id].set_hand(set(predictions))
                 return True
             else:
-                print(f"Wrong number of cards detected: {len(predictions)}")  # Debug log
+                print(
+                    f"Wrong number of cards detected: {len(predictions)}"
+                )  # Debug log
                 return False
         except Exception as e:
             print(f"Error in hand detection: {e}")
             return False
 
-    def attempt_flop_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
+    def attempt_flop_detection(
+        self, player_id: str, predictions: dict[str, str]
+    ) -> bool:
         # check if the flop can be detected and set it
         if len(predictions) == 0:
             return False
-        
+
         output_cards = set(predictions.keys())
         player_cards = self.players[player_id].get_hand()
 
@@ -50,7 +56,10 @@ class Game:
             return True
         else:
             return False
-    def attempt_turn_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
+
+    def attempt_turn_detection(
+        self, player_id: str, predictions: dict[str, str]
+    ) -> bool:
         # check if the turn can be detected and set it
         if len(predictions) == 0:
             return False
@@ -67,8 +76,10 @@ class Game:
             return True
         else:
             return False
-        
-    def attempt_river_detection(self, player_id: str, predictions: dict[str, str]) -> bool:
+
+    def attempt_river_detection(
+        self, player_id: str, predictions: dict[str, str]
+    ) -> bool:
         # check if the river can be detected and set it
         if len(predictions) == 0:
             return False
@@ -109,15 +120,15 @@ class Game:
         if player_id not in self.players:
             print(f"Cannot set hand: Player {player_id} not found")
             return
-        
-        print(f"Setting hand for {player_id}: {hand}") 
+
+        print(f"Setting hand for {player_id}: {hand}")
         self.players[player_id].set_hand(set(hand))
 
     def get_player_hand(self, player_id: str) -> set[str]:
         if player_id not in self.players:
             print(f"Cannot get hand: Player {player_id} not found")
             return set()
-        
+
         hand = self.players[player_id].get_hand()
         print(f"Getting hand for {player_id}: {hand}")
         return hand
@@ -125,27 +136,21 @@ class Game:
     # =============================================================================
     # Board Management
     # =============================================================================
-    
+
     def set_flop(self, flop: list[str]) -> None:
         self.flop = flop
 
     def get_flop(self) -> list[str] | dict[str, str]:
         return self.flop
-    
+
     def set_turn(self, turn: str) -> None:
         self.turn = turn
 
     def get_turn(self) -> str | dict[str, str]:
         return self.turn
-    
+
     def set_river(self, river: str) -> None:
         self.river = river
 
-    def get_river(self) -> str | dict[str, str] :
+    def get_river(self) -> str | dict[str, str]:
         return self.river
-
-    
-    
-    
-    
-    

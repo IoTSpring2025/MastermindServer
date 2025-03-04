@@ -62,6 +62,7 @@ async def get_hand(game_id: str, player_id: str):
     else:
         return {"message": "No hand detected."}
 
+
 # API endpoint for getting the flop
 @app.get("/get_flop")
 async def get_flop(game_id: str):
@@ -70,6 +71,7 @@ async def get_flop(game_id: str):
         return list(flop)
     else:
         return {"message": "No flop detected."}
+
 
 # API endpoint for getting the turn
 @app.get("/get_turn")
@@ -80,6 +82,7 @@ async def get_turn(game_id: str):
     else:
         return {"message": "No turn detected."}
 
+
 # API endpoint for getting the river
 @app.get("/get_river")
 async def get_river(game_id: str):
@@ -88,6 +91,7 @@ async def get_river(game_id: str):
         return river
     else:
         return {"message": "No river detected."}
+
 
 # API endpoint to get the list of game
 @app.get("/get_games")

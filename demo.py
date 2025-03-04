@@ -28,22 +28,30 @@ async def stream_video(game_id, player_id, uri, display):
                 if not ret:
                     print("Error: Failed to encode frame")
                     continue
-                
+
                 # check hand
-                print('--------------------------------')
-                response = requests.get(f"http://0.0.0.0:8080/get_hand?game_id={game_id}&player_id={player_id}")
+                print("--------------------------------")
+                response = requests.get(
+                    f"http://0.0.0.0:8080/get_hand?game_id={game_id}&player_id={player_id}"
+                )
                 print("Hand: ", response.json())
 
                 # check flop
-                response = requests.get(f"http://0.0.0.0:8080/get_flop?game_id={game_id}")
+                response = requests.get(
+                    f"http://0.0.0.0:8080/get_flop?game_id={game_id}"
+                )
                 print("Flop: ", response.json())
 
                 # check turn
-                response = requests.get(f"http://0.0.0.0:8080/get_turn?game_id={game_id}")
+                response = requests.get(
+                    f"http://0.0.0.0:8080/get_turn?game_id={game_id}"
+                )
                 print("Turn: ", response.json())
 
                 # check river
-                response = requests.get(f"http://0.0.0.0:8080/get_river?game_id={game_id}")
+                response = requests.get(
+                    f"http://0.0.0.0:8080/get_river?game_id={game_id}"
+                )
                 print("River: ", response.json())
 
                 frame_bytes = buffer.tobytes()
