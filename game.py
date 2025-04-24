@@ -1,5 +1,9 @@
 from player import Player
 from model import Model
+import requests
+import json
+import os
+from typing import Dict, Any, List, Optional
 
 
 class Game:
@@ -368,3 +372,256 @@ class Game:
             self.game_stage = new_stage
             self.recently_assigned_cards.clear()
             print(f"Game stage updated to {new_stage}, cleared recently assigned cards")
+            
+    # =============================================================================
+    # ChatGPT Integration for Poker Advice
+    # =============================================================================
+    
+    def get_game_stage(self) -> str:
+        """
+        Determine the current poker game stage based on community cards.
+        
+        Returns:
+            str: The game stage ('pre-flop', 'flop', 'turn', or 'river')
+        """
+        if not self.flop:
+            return "pre-flop"
+        elif self.flop and self.turn is None:
+            return "flop"
+        elif self.flop and self.turn and self.river is None:
+            return "turn"
+        elif self.flop and self.turn and self.river:
+            return "river"
+        else:
+            return "unknown"
+    
+    def get_board_cards(self) -> List[str]:
+        """
+        Get all community cards currently on the board.
+        
+        Returns:
+            List[str]: List of all community cards
+        """
+        board_cards = []
+        
+        # Add flop cards if they exist
+        if self.flop:
+            board_cards.extend(self.flop)
+        
+        # Add turn card if it exists
+        if self.turn:
+            board_cards.append(self.turn)
+            
+        # Add river card if it exists
+        if self.river:
+            board_cards.append(self.river)
+            
+        return board_cards
+    
+    def get_poker_advice(self, player_id: str, opponent_id: str, pot_size: int = 0, 
+                        player_stack: int = 0, opponent_stack: int = 0) -> str:
+        """
+        Query ChatGPT API to get poker advice for the current game state
+        
+        Args:
+            player_id: ID of the player requesting advice
+            opponent_id: ID of the opponent player
+            pot_size: Current pot size 
+            player_stack: Player's remaining chips
+            opponent_stack: Opponent's remaining chips
+            
+        Returns:
+            str: Recommended action ('raise', 'check', or 'fold') and explanation
+        """
+        # Ensure both players exist
+        if player_id not in self.players or opponent_id not in self.players:
+            return "Error: One or both players not found in the game"
+        
+        # Get player hands
+        player_hand = list(self.players[player_id].get_hand())
+        opponent_hand = list(self.players[opponent_id].get_hand())
+        
+        # Get board cards
+        board_cards = self.get_board_cards()
+        
+        # Get API key from environment
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            return "Error: OPENAI_API_KEY environment variable not set"
+        
+        # Determine game stage
+        game_stage = self.get_game_stage()
+        
+        # Create the prompt
+        board_info = f"- Board cards: {', '.join(board_cards)}" if board_cards else "- Board cards: none (pre-flop)"
+        
+        prompt = f"""
+In a heads-up poker game with both hands face up, currently at the {game_stage} stage:
+- My cards: {', '.join(player_hand)}
+- Opponent's cards: {', '.join(opponent_hand)}
+{board_info}
+- Pot size: {pot_size}
+- My stack: {player_stack}
+- Opponent's stack: {opponent_stack}
+
+Given this scenario, what is the best poker action? Answer with only one word: 'raise', 'check', or 'fold'.
+"""
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        
+        payload = {
+            "model": "gpt-4",  # You can change this to a different model
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": "You are a poker strategy expert. Respond with only one word: 'raise', 'check', or 'fold'."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "max_tokens": 10,
+            "temperature": 0.2,
+        }
+        
+        try:
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions", 
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            
+            # Extract the decision
+            result = response.json()
+            decision = result["choices"][0]["message"]["content"].strip().lower()
+            
+            # Ensure we get only one of the expected responses
+            valid_responses = ["raise", "check", "fold"]
+            if any(valid in decision for valid in valid_responses):
+                for valid in valid_responses:
+                    if valid in decision:
+                        return valid
+            return "check"  # Default if we can't parse a clear answer
+        
+        except Exception as e:
+            print(f"Error querying ChatGPT: {str(e)}")
+            return f"Error: {str(e)}"
+            
+    def get_detailed_poker_advice(self, player_id: str, opponent_id: str, pot_size: int = 0, 
+                                player_stack: int = 0, opponent_stack: int = 0) -> Dict[str, Any]:
+        """
+        Get detailed poker advice including explanation and confidence level
+        
+        Args:
+            player_id: ID of the player requesting advice
+            opponent_id: ID of the opponent player
+            pot_size: Current pot size 
+            player_stack: Player's remaining chips
+            opponent_stack: Opponent's remaining chips
+            
+        Returns:
+            Dict with action, explanation, and confidence level
+        """
+        # Ensure both players exist
+        if player_id not in self.players or opponent_id not in self.players:
+            return {"action": "error", "explanation": "One or both players not found in the game", "confidence": 0}
+        
+        # Get player hands
+        player_hand = list(self.players[player_id].get_hand())
+        opponent_hand = list(self.players[opponent_id].get_hand())
+        
+        # Get board cards
+        board_cards = self.get_board_cards()
+        
+        # Get API key from environment
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            return {"action": "error", "explanation": "OPENAI_API_KEY environment variable not set", "confidence": 0}
+        
+        # Determine game stage
+        game_stage = self.get_game_stage()
+        
+        # Create the prompt
+        board_info = f"- Board cards: {', '.join(board_cards)}" if board_cards else "- Board cards: none (pre-flop)"
+        
+        prompt = f"""
+In a heads-up poker game with both hands face up, currently at the {game_stage} stage:
+- My cards: {', '.join(player_hand)}
+- Opponent's cards: {', '.join(opponent_hand)}
+{board_info}
+- Pot size: {pot_size}
+- My stack: {player_stack}
+- Opponent's stack: {opponent_stack}
+
+Given this scenario:
+1. What is the best poker action? Choose one: 'raise', 'check', or 'fold'.
+2. Provide a brief explanation (1-2 sentences) for why this is the best action.
+3. Give a confidence level between 0-100% for your recommendation.
+
+Format your response as JSON: {{"action": "chosen_action", "explanation": "your brief explanation", "confidence": confidence_number}}
+"""
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        
+        payload = {
+            "model": "gpt-4",  # You can change this to a different model
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": "You are a poker strategy expert. Respond with JSON containing action, explanation and confidence level."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "max_tokens": 150,
+            "temperature": 0.2,
+        }
+        
+        try:
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions", 
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            
+            # Extract the response
+            result = response.json()
+            response_content = result["choices"][0]["message"]["content"].strip()
+            
+            # Parse the JSON response
+            try:
+                advice_data = json.loads(response_content)
+                # Validate required fields
+                if "action" not in advice_data:
+                    advice_data["action"] = "check"
+                if "explanation" not in advice_data:
+                    advice_data["explanation"] = "No explanation provided"
+                if "confidence" not in advice_data:
+                    advice_data["confidence"] = 50
+                
+                # Ensure action is valid
+                valid_actions = ["raise", "check", "fold"]
+                if advice_data["action"].lower() not in valid_actions:
+                    advice_data["action"] = "check"
+                
+                return advice_data
+                
+            except json.JSONDecodeError:
+                # Fallback in case of parsing error
+                default_response = {"action": "check", "explanation": "Could not parse AI response", "confidence": 50}
+                return default_response
+        
+        except Exception as e:
+            print(f"Error querying ChatGPT: {str(e)}")
+            return {"action": "error", "explanation": f"Error: {str(e)}", "confidence": 0}
