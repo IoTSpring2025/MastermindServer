@@ -110,5 +110,63 @@ async def get_players(game_id: str):
     return data.get_game_players(game_id=game_id)
 
 
+# API endpoint for getting poker advice
+@app.get("/get_poker_advice")
+async def get_poker_advice(
+    game_id: str, 
+    player_id: str, 
+    opponent_id: str, 
+    pot_size: int = 0, 
+    player_stack: int = 0, 
+    opponent_stack: int = 0
+):
+    try:
+        # Get the advice using the data class method
+        advice = data.get_poker_advice(
+            game_id=game_id,
+            player_id=player_id,
+            opponent_id=opponent_id,
+            pot_size=pot_size,
+            player_stack=player_stack,
+            opponent_stack=opponent_stack
+        )
+        
+        if isinstance(advice, str) and advice.startswith("Error:"):
+            raise HTTPException(status_code=400, detail=advice)
+            
+        return {"action": advice}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# API endpoint for getting detailed poker advice with explanation
+@app.get("/get_detailed_poker_advice")
+async def get_detailed_poker_advice(
+    game_id: str, 
+    player_id: str, 
+    opponent_id: str, 
+    pot_size: int = 0, 
+    player_stack: int = 0, 
+    opponent_stack: int = 0
+):
+    try:
+        # Get the detailed advice using the data class method
+        advice = data.get_detailed_poker_advice(
+            game_id=game_id,
+            player_id=player_id,
+            opponent_id=opponent_id,
+            pot_size=pot_size,
+            player_stack=player_stack,
+            opponent_stack=opponent_stack
+        )
+        
+        if "action" in advice and advice["action"] == "error":
+            raise HTTPException(status_code=400, detail=advice["explanation"])
+            
+        return advice
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)

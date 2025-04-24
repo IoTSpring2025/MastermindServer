@@ -87,3 +87,57 @@ class MastermindData:
 
         except Exception as e:
             return {"error": f"Inference error: {str(e)}"}
+
+    def get_poker_advice(self, game_id: str, player_id: str, opponent_id: str, 
+                         pot_size: int = 0, player_stack: int = 0, opponent_stack: int = 0) -> str:
+        """
+        Get poker advice for a player in a game
+        
+        Args:
+            game_id: ID of the game
+            player_id: ID of the player requesting advice
+            opponent_id: ID of the opponent player
+            pot_size: Current pot size
+            player_stack: Player's remaining chips
+            opponent_stack: Opponent's remaining chips
+            
+        Returns:
+            str: Recommended action ('raise', 'check', or 'fold')
+        """
+        if game_id not in self.games:
+            return f"Error: Game {game_id} not found"
+            
+        return self.games[game_id].get_poker_advice(
+            player_id=player_id,
+            opponent_id=opponent_id,
+            pot_size=pot_size,
+            player_stack=player_stack,
+            opponent_stack=opponent_stack
+        )
+        
+    def get_detailed_poker_advice(self, game_id: str, player_id: str, opponent_id: str, 
+                                 pot_size: int = 0, player_stack: int = 0, opponent_stack: int = 0) -> dict:
+        """
+        Get detailed poker advice including explanation and confidence level
+        
+        Args:
+            game_id: ID of the game
+            player_id: ID of the player requesting advice
+            opponent_id: ID of the opponent player
+            pot_size: Current pot size
+            player_stack: Player's remaining chips
+            opponent_stack: Opponent's remaining chips
+            
+        Returns:
+            dict: Dictionary with action, explanation, and confidence level
+        """
+        if game_id not in self.games:
+            return {"action": "error", "explanation": f"Game {game_id} not found", "confidence": 0}
+            
+        return self.games[game_id].get_detailed_poker_advice(
+            player_id=player_id,
+            opponent_id=opponent_id,
+            pot_size=pot_size,
+            player_stack=player_stack,
+            opponent_stack=opponent_stack
+        )
