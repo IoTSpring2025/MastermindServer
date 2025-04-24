@@ -56,19 +56,34 @@ class MastermindData:
             if isinstance(predictions, str) and "Error" in predictions:
                 return {"error": predictions}
 
-            # detect stages of game
+            # detect stages of game - with clear status returns
+            detection_status = None
+            
             if self.games[game_id].players[player_id].get_hand() == set():
-                self.games[game_id].attempt_hand_detection(player_id, predictions)
+                success = self.games[game_id].attempt_hand_detection(player_id, predictions)
+                if success:
+                    detection_status = "Hand detected"
             elif self.games[game_id].flop == []:
-                self.games[game_id].attempt_flop_detection(player_id, predictions)
+                success = self.games[game_id].attempt_flop_detection(player_id, predictions)
+                if success:
+                    detection_status = "Flop detected"
             elif self.games[game_id].turn == None:
-                self.games[game_id].attempt_turn_detection(player_id, predictions)
+                success = self.games[game_id].attempt_turn_detection(player_id, predictions)
+                if success:
+                    detection_status = "Turn detected"
             elif self.games[game_id].river == None:
-                self.games[game_id].attempt_river_detection(player_id, predictions)
+                success = self.games[game_id].attempt_river_detection(player_id, predictions)
+                if success:
+                    detection_status = "River detected"
 
-            return {
+            response = {
                 "detected cards": predictions,
             }
+            
+            if detection_status:
+                response["status"] = detection_status
+                
+            return response
 
         except Exception as e:
             return {"error": f"Inference error: {str(e)}"}

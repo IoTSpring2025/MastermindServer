@@ -9,7 +9,7 @@ class Model:
     def __init__(self, version: str, confidence: int = 33, overlap: int = 0):
         self.version: str = version
         self.rf_client = Roboflow(api_key=os.environ.get("ROBOFLOW_API_KEY"))
-        self.project: str = self.rf_client.workspace().project(
+        self.project: str = self.rf_client.workspace(os.environ.get("ROBOFLOW_WORKSPACE")).project(
             os.environ.get("ROBOFLOW_PROJECT")
         )
         self.model = self.project.version(self.version).model
