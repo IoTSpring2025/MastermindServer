@@ -6,11 +6,12 @@ import argparse
 import requests
 
 
-async def stream_video(game_id, player_id, uri, display):
-    uri += f"socket/video?game_id={game_id}&player_id={player_id}"
+async def stream_video(game_id, player_id, base_url, display):
+    ws_url = f"{base_url}socket/video?game_id={game_id}&player_id={player_id}"
+    http_url = base_url.replace('ws://', 'http://').replace('wss://', 'https://')
 
     # connect to web socket
-    async with websockets.connect(uri) as websocket:
+    async with websockets.connect(ws_url) as websocket:
         # open camera
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
@@ -32,25 +33,25 @@ async def stream_video(game_id, player_id, uri, display):
                 # check hand
                 print("--------------------------------")
                 response = requests.get(
-                    f"http://0.0.0.0:8080/get_hand?game_id={game_id}&player_id={player_id}"
+                    f"{http_url}get_hand?game_id={game_id}&player_id={player_id}"
                 )
                 print("Hand: ", response.json())
 
                 # check flop
                 response = requests.get(
-                    f"http://0.0.0.0:8080/get_flop?game_id={game_id}"
+                    f"{http_url}get_flop?game_id={game_id}"
                 )
                 print("Flop: ", response.json())
 
                 # check turn
                 response = requests.get(
-                    f"http://0.0.0.0:8080/get_turn?game_id={game_id}"
+                    f"{http_url}get_turn?game_id={game_id}"
                 )
                 print("Turn: ", response.json())
 
                 # check river
                 response = requests.get(
-                    f"http://0.0.0.0:8080/get_river?game_id={game_id}"
+                    f"{http_url}get_river?game_id={game_id}"
                 )
                 print("River: ", response.json())
 
@@ -87,16 +88,18 @@ if __name__ == "__main__":
     player_id = "dummy"
 
     if args.remote:
-        uri = "wss://mastermindserver-146524160112.us-central1.run.app/"
+        base_url = "wss://mastermindserver-146524160112.us-central1.run.app/"
+        http_url = "https://mastermindserver-146524160112.us-central1.run.app/"
         print("Connecting to remote server")
     else:
-        uri = "ws://0.0.0.0:8080/"
+        base_url = "ws://localhost:8080/"
+        http_url = "http://localhost:8080/"
         print("Connecting to local server")
 
     # create dummy game
-    requests.post(f"http://0.0.0.0:8080/create?game_id={game_id}&player_id={player_id}")
+    requests.post(f"{http_url}create?game_id={game_id}&player_id={player_id}")
 
     # run async
     asyncio.get_event_loop().run_until_complete(
-        stream_video(game_id, player_id, uri, args.display)
+        stream_video(game_id, player_id, base_url, args.display)
     )
