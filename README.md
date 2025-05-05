@@ -76,18 +76,22 @@ ___
 
 To set up your environment:
 ```bash
-python -m venv venv
-source venv/bin/activate
+python -m venv --system-site-packages env
+source env/bin/activate
 pip install -r requirements.txt
+
 ```
 
 ___
 **Running the server**
 
+For this we do not need to this but for reference:
+
 Run the server locally with:  
 `./local_run.sh`
 
 This will build and run the docker container specified in the Dockerfile.
+
 
 ___
 **Testing with Demo Client**
@@ -95,16 +99,16 @@ ___
 Run the demo client with:
 ```bash
 # Local server with display
-python demo.py --display
+python cards.py --display
 
 # Local server without display
-python demo.py
+python cards.py
 
 # Remote server with display
-python demo.py --remote --display
+python cards.py --remote --display
 
 # Remote server without display
-python demo.py --remote
+python cards.py --remote
 ```
 
 The demo client will:
