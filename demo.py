@@ -4,55 +4,43 @@ import websockets
 import json
 import argparse
 import requests
+import time
+from picamera2 import Picamera2
 
 
 async def stream_video(game_id, player_id, uri, display):
     uri += f"socket/video?game_id={game_id}&player_id={player_id}"
 
+    # Initialize PiCamera2
+    try:
+        picam2 = Picamera2()
+        preview_config = picam2.create_preview_configuration()
+        picam2.configure(preview_config)
+        picam2.start()
+        print("✅ Camera initialized successfully")
+        # Give camera time to warm up
+        time.sleep(2)
+    except Exception as e:
+        print(f"❌ Error initializing camera: {e}")
+        return
+
     # connect to web socket
     async with websockets.connect(uri) as websocket:
-        # open camera
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            print("Error: Cannot open video capture device.")
-            return
-
         try:
             while True:
-                ret, frame = cap.read()
-                if not ret:
-                    print("Error: Failed to capture frame")
-                    break
+                try:
+                    # Capture frame using PiCamera2
+                    frame = picam2.capture_array()
+                    # Convert from BGR to RGB if needed
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                except Exception as e:
+                    print(f"Error capturing frame: {e}")
+                    continue
 
                 ret, buffer = cv2.imencode(".jpg", frame)
                 if not ret:
                     print("Error: Failed to encode frame")
                     continue
-
-                # check hand
-                print("--------------------------------")
-                response = requests.get(
-                    f"http://0.0.0.0:8080/get_hand?game_id={game_id}&player_id={player_id}"
-                )
-                print("Hand: ", response.json())
-
-                # check flop
-                response = requests.get(
-                    f"http://0.0.0.0:8080/get_flop?game_id={game_id}"
-                )
-                print("Flop: ", response.json())
-
-                # check turn
-                response = requests.get(
-                    f"http://0.0.0.0:8080/get_turn?game_id={game_id}"
-                )
-                print("Turn: ", response.json())
-
-                # check river
-                response = requests.get(
-                    f"http://0.0.0.0:8080/get_river?game_id={game_id}"
-                )
-                print("River: ", response.json())
 
                 frame_bytes = buffer.tobytes()
                 await websocket.send(frame_bytes)
@@ -70,9 +58,11 @@ async def stream_video(game_id, player_id, uri, display):
                         break
 
         except Exception as e:
-            print("Exception occurred:", e)
+            print(f"Exception occurred: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
-            cap.release()
+            picam2.stop()
             if display:
                 cv2.destroyAllWindows()
 
